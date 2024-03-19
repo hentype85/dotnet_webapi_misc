@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios Paginados</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <h1>Usuarios</h1>
+
+    <div id="container"></div>
+
+    <button onclick="cargarPaginaAnterior()">Anterior</button>
+    <button onclick="cargarPaginaSiguiente()">Siguiente</button>
+
+    <script>
+
+        let paginaActual = 0;
+        let statusCode;
+
+        function cargarUsuariosPaginados(pagina) {
+            fetch(`https://localhost:7196/api/get/usuariosPaginado?pagina=${pagina}`)
+            .then(response => {
+                if (!response.ok) {
+                    statusCode = response.status;
+                    if (statusCode === 404) {
+                        paginaActual--;
+                    }
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                statusCode = response.status;
+                return response.json();
+            })
+            .then(data => {
+                mostrarUsuarios(data);
+            })
+            .catch(error => {
+                console.error(error);
+            });
+        }
+
+        function mostrarUsuarios(usuarios) {
+            let container = $('#container');
+            container.empty();
+
+            if (usuarios.length === 0) {
+                container.append('<p>No hay usuarios disponibles.</p>');
+            } else {
+                usuarios.forEach((usuario) => {
+                    container.append(`<p>${usuario.nombre}</p>`);
+                });
+            }
+        }
+
+        function cargarPaginaAnterior() {
+            if (paginaActual > 0) {
+                paginaActual--;
+                cargarUsuariosPaginados(paginaActual);
+            }
+        }
+
+        function cargarPaginaSiguiente() {
+            if (statusCode !== 404) {
+                paginaActual++;
+            }
+            cargarUsuariosPaginados(paginaActual);
+        }
+
+    </script>
+
+</body>
+</html>
